@@ -1,0 +1,1 @@
+スライドは[こちら](https://ymattu.github.io/TokyoR70/slide.html#/)

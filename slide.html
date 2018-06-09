@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="@y__mattu" />
+  <title>はじめての MCMC、  はじめての Stan</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="slide_files/reveal.js-3.3.0.1/css/reveal.css"/>
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #ffffff; color: #1f1c1b; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; background-color: #ffffff; color: #a0a0a0; border-right: 1px solid #a0a0a0; }
+td.sourceCode { padding-left: 5px; }
+pre, code { color: #1f1c1b; background-color: #ffffff; }
+code > span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+code > span.dt { color: #0057ae; } /* DataType */
+code > span.dv { color: #b08000; } /* DecVal */
+code > span.bn { color: #b08000; } /* BaseN */
+code > span.fl { color: #b08000; } /* Float */
+code > span.cn { color: #aa5500; } /* Constant */
+code > span.ch { color: #924c9d; } /* Char */
+code > span.sc { color: #3daee9; } /* SpecialChar */
+code > span.st { color: #bf0303; } /* String */
+code > span.vs { color: #bf0303; } /* VerbatimString */
+code > span.ss { color: #ff5500; } /* SpecialString */
+code > span.im { color: #ff5500; } /* Import */
+code > span.co { color: #898887; } /* Comment */
+code > span.do { color: #607880; } /* Documentation */
+code > span.an { color: #ca60ca; } /* Annotation */
+code > span.cv { color: #0095ff; } /* CommentVar */
+code > span.ot { color: #006e28; } /* Other */
+code > span.fu { color: #644a9b; } /* Function */
+code > span.va { color: #0057ae; } /* Variable */
+code > span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #1f1c1b; } /* Operator */
+code > span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+code > span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+code > span.pp { color: #006e28; } /* Preprocessor */
+code > span.at { color: #0057ae; } /* Attribute */
+code > span.re { color: #0057ae; } /* RegionMarker */
+code > span.in { color: #b08000; } /* Information */
+code > span.wa { color: #bf0303; } /* Warning */
+code > span.al { color: #bf0303; font-weight: bold; } /* Alert */
+code > span.er { color: #bf0303; text-decoration: underline; } /* Error */
+code > span. { color: #1f1c1b; } /* Normal */
+</style>
+
+<link rel="stylesheet" href="slide_files/reveal.js-3.3.0.1/css/theme/sky.css" id="theme">
+
+
+  <!-- some tweaks to reveal css -->
+  <style type="text/css">
+    .reveal h1 { font-size: 2.0em; }
+    .reveal h2 { font-size: 1.5em;  }
+    .reveal h3 { font-size: 1.25em;	}
+    .reveal h4 { font-size: 1em;	}
+
+    .reveal .slides>section,
+    .reveal .slides>section>section {
+      padding: 0px 0px;
+    }
+
+
+
+    .reveal table {
+      border-width: 1px;
+      border-spacing: 2px;
+      border-style: dotted;
+      border-color: gray;
+      border-collapse: collapse;
+      font-size: 0.7em;
+    }
+
+    .reveal table th {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      font-weight: bold;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+    .reveal table td {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+
+  </style>
+
+    <style type="text/css">code{white-space: pre;}</style>
+
+    <link rel="stylesheet" href="for_revealjs.css"/>
+
+<!-- Printing and PDF exports -->
+<script id="paper-css" type="application/dynamic-css">
+
+/* Default Print Stylesheet Template
+   by Rob Glazebrook of CSSnewbie.com
+   Last Updated: June 4, 2008
+
+   Feel free (nay, compelled) to edit, append, and
+   manipulate this file as you see fit. */
+
+
+@media print {
+
+	/* SECTION 1: Set default width, margin, float, and
+	   background. This prevents elements from extending
+	   beyond the edge of the printed page, and prevents
+	   unnecessary background images from printing */
+	html {
+		background: #fff;
+		width: auto;
+		height: auto;
+		overflow: visible;
+	}
+	body {
+		background: #fff;
+		font-size: 20pt;
+		width: auto;
+		height: auto;
+		border: 0;
+		margin: 0 5%;
+		padding: 0;
+		overflow: visible;
+		float: none !important;
+	}
+
+	/* SECTION 2: Remove any elements not needed in print.
+	   This would include navigation, ads, sidebars, etc. */
+	.nestedarrow,
+	.controls,
+	.fork-reveal,
+	.share-reveal,
+	.state-background,
+	.reveal .progress,
+	.reveal .backgrounds {
+		display: none !important;
+	}
+
+	/* SECTION 3: Set body font face, size, and color.
+	   Consider using a serif font for readability. */
+	body, p, td, li, div {
+		font-size: 20pt!important;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		color: #000;
+	}
+
+	/* SECTION 4: Set heading font face, sizes, and color.
+	   Differentiate your headings from your body text.
+	   Perhaps use a large sans-serif for distinction. */
+	h1,h2,h3,h4,h5,h6 {
+		color: #000!important;
+		height: auto;
+		line-height: normal;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		text-shadow: 0 0 0 #000 !important;
+		text-align: left;
+		letter-spacing: normal;
+	}
+	/* Need to reduce the size of the fonts for printing */
+	h1 { font-size: 28pt !important;  }
+	h2 { font-size: 24pt !important; }
+	h3 { font-size: 22pt !important; }
+	h4 { font-size: 22pt !important; font-variant: small-caps; }
+	h5 { font-size: 21pt !important; }
+	h6 { font-size: 20pt !important; font-style: italic; }
+
+	/* SECTION 5: Make hyperlinks more usable.
+	   Ensure links are underlined, and consider appending
+	   the URL to the end of the link for usability. */
+	a:link,
+	a:visited {
+		color: #000 !important;
+		font-weight: bold;
+		text-decoration: underline;
+	}
+	/*
+	.reveal a:link:after,
+	.reveal a:visited:after {
+		content: " (" attr(href) ") ";
+		color: #222 !important;
+		font-size: 90%;
+	}
+	*/
+
+
+	/* SECTION 6: more reveal.js specific additions by @skypanther */
+	ul, ol, div, p {
+		visibility: visible;
+		position: static;
+		width: auto;
+		height: auto;
+		display: block;
+		overflow: visible;
+		margin: 0;
+		text-align: left !important;
+	}
+	.reveal pre,
+	.reveal table {
+		margin-left: 0;
+		margin-right: 0;
+	}
+	.reveal pre code {
+		padding: 20px;
+		border: 1px solid #ddd;
+	}
+	.reveal blockquote {
+		margin: 20px 0;
+	}
+	.reveal .slides {
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 0 !important;
+		zoom: 1 !important;
+
+		overflow: visible !important;
+		display: block !important;
+
+		text-align: left !important;
+		-webkit-perspective: none;
+		   -moz-perspective: none;
+		    -ms-perspective: none;
+		        perspective: none;
+
+		-webkit-perspective-origin: 50% 50%;
+		   -moz-perspective-origin: 50% 50%;
+		    -ms-perspective-origin: 50% 50%;
+		        perspective-origin: 50% 50%;
+	}
+	.reveal .slides section {
+		visibility: visible !important;
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		display: block !important;
+		overflow: visible !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 60px 20px !important;
+		z-index: auto !important;
+
+		opacity: 1 !important;
+
+		page-break-after: always !important;
+
+		-webkit-transform-style: flat !important;
+		   -moz-transform-style: flat !important;
+		    -ms-transform-style: flat !important;
+		        transform-style: flat !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+
+		-webkit-transition: none !important;
+		   -moz-transition: none !important;
+		    -ms-transition: none !important;
+		        transition: none !important;
+	}
+	.reveal .slides section.stack {
+		padding: 0 !important;
+	}
+	.reveal section:last-of-type {
+		page-break-after: avoid !important;
+	}
+	.reveal section .fragment {
+		opacity: 1 !important;
+		visibility: visible !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+	}
+	.reveal section img {
+		display: block;
+		margin: 15px 0px;
+		background: rgba(255,255,255,1);
+		border: 1px solid #666;
+		box-shadow: none;
+	}
+
+	.reveal section small {
+		font-size: 0.8em;
+	}
+
+}  
+</script>
+
+
+<script id="pdf-css" type="application/dynamic-css">
+    
+/**
+ * This stylesheet is used to print reveal.js
+ * presentations to PDF.
+ *
+ * https://github.com/hakimel/reveal.js#pdf-export
+ */
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+
+body {
+	margin: 0 auto !important;
+	border: 0;
+	padding: 0;
+	float: none !important;
+	overflow: visible;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+/* Remove any elements not needed in print. */
+.nestedarrow,
+.reveal .controls,
+.reveal .progress,
+.reveal .playback,
+.reveal.overview,
+.fork-reveal,
+.share-reveal,
+.state-background {
+	display: none !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	text-shadow: 0 0 0 #000 !important;
+}
+
+.reveal pre code {
+	overflow: hidden !important;
+	font-family: Courier, 'Courier New', monospace !important;
+}
+
+ul, ol, div, p {
+	visibility: visible;
+	position: static;
+	width: auto;
+	height: auto;
+	display: block;
+	overflow: visible;
+	margin: auto;
+}
+.reveal {
+	width: auto !important;
+	height: auto !important;
+	overflow: hidden !important;
+}
+.reveal .slides {
+	position: static;
+	width: 100%;
+	height: auto;
+
+	left: auto;
+	top: auto;
+	margin: 0 !important;
+	padding: 0 !important;
+
+	overflow: visible;
+	display: block;
+
+	-webkit-perspective: none;
+	   -moz-perspective: none;
+	    -ms-perspective: none;
+	        perspective: none;
+
+	-webkit-perspective-origin: 50% 50%; /* there isn't a none/auto value but 50-50 is the default */
+	   -moz-perspective-origin: 50% 50%;
+	    -ms-perspective-origin: 50% 50%;
+	        perspective-origin: 50% 50%;
+}
+
+.reveal .slides section {
+	page-break-after: always !important;
+
+	visibility: visible !important;
+	position: relative !important;
+	display: block !important;
+	position: relative !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	min-height: 1px;
+
+	opacity: 1 !important;
+
+	-webkit-transform-style: flat !important;
+	   -moz-transform-style: flat !important;
+	    -ms-transform-style: flat !important;
+	        transform-style: flat !important;
+
+	-webkit-transform: none !important;
+	   -moz-transform: none !important;
+	    -ms-transform: none !important;
+	        transform: none !important;
+}
+
+.reveal section.stack {
+	margin: 0 !important;
+	padding: 0 !important;
+	page-break-after: avoid !important;
+	height: auto !important;
+	min-height: auto !important;
+}
+
+.reveal img {
+	box-shadow: none;
+}
+
+.reveal .roll {
+	overflow: visible;
+	line-height: 1em;
+}
+
+/* Slide backgrounds are placed inside of their slide when exporting to PDF */
+.reveal section .slide-background {
+	display: block !important;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: -1;
+}
+
+/* All elements should be above the slide-background */
+.reveal section>* {
+	position: relative;
+	z-index: 1;
+}
+
+/* Display slide speaker notes when 'showNotes' is enabled */
+.reveal .speaker-notes-pdf {
+	display: block;
+	width: 100%;
+	max-height: none;
+	left: auto;
+	top: auto;
+	z-index: 100;
+}
+
+/* Display slide numbers when 'slideNumber' is enabled */
+.reveal .slide-number-pdf {
+	display: block;
+	position: absolute;
+	font-size: 14px;
+}
+
+</script>
+
+
+<script>
+var style = document.createElement( 'style' );
+style.type = 'text/css';
+var style_script_id = window.location.search.match( /print-pdf/gi ) ? 'pdf-css' : 'paper-css';
+var style_script = document.getElementById(style_script_id).text;
+style.innerHTML = style_script;
+document.getElementsByTagName('head')[0].appendChild(style);
+</script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/contrib/auto-render.min.js" integrity="sha384-dq1/gEHSxPZQ7DdrM82ID4YVol9BYyU7GbWlIwnwyPzotpoc57wDw/guX8EaYGPx" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}]
+        });
+      });
+    </script>
+    <link href="slide_files/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+    <h1 class="title">はじめての MCMC、<br> はじめての Stan</h1>
+    <h2 class="author"><span class="citation" data-cites="y__mattu">@y__mattu</span></h2>
+    <h3 class="date">2018/6/9 Tokyo.R #70 <ベイズ特集会></h3>
+</section>
+
+<section><section class="titleslide slide level1"><h1>はじめに</h1></section><section class="slide level2">
+<h2>誰？</h2>
+<div class="column1">
+<ul>
+<li>松村優哉</li>
+<li><u>Twitter</u>: <strong>y__mattu</strong></li>
+<li><u>GitHub</u>: <strong>ymattu</strong></li>
+<li>M2</li>
+<li>計量経済学、ベイズ統計、因果推論、マーケティング</li>
+<li>言語: R, Python, SAS</li>
+<li><a href="https://ymattu.github.io/" class="uri">https://ymattu.github.io/</a></li>
+<li><a href="http://y-mattu.hatenablog.com/" class="uri">http://y-mattu.hatenablog.com/</a></li>
+<li>Tokyo.R / Japan.R 運営</li>
+</ul>
+</div>
+<div class="column2">
+<p><img src="img/twitter_icon.jpg" alt="icon" /></p>
+</div>
+</section><section class="slide level2">
+<h2>著書(共著)</h2>
+<div class="column1">
+<p><img src="img/datasci.jpg" alt="book" /></p>
+</div>
+<div class="column2">
+<ul>
+<li>2 部構成</li>
+<li>第一部(基礎編)
+<ul>
+<li>R 入門</li>
+<li>R のデータハンドリング基礎</li>
+</ul></li>
+<li>第二部(応用編)
+<ul>
+<li>テキストマイニング</li>
+<li>R のパフォーマンス向上</li>
+<li>地理データ解析</li>
+<li>ベイズ最適化入門</li>
+<li>…etc</li>
+</ul></li>
+</ul>
+</div>
+</section><section id="bo" class="slide level2">
+<h2>著書 2</h2>
+<h4 id="r--rstudio-tidyverse-"><strong>R ユーザのための RStudio[実践]入門 <br> − tidyverse によるモダンな分析フローの世界−</strong></h4>
+<div class="column1">
+<p><img src="img/rstudiobook.jpg" alt="rstudiobook" /></p>
+</div>
+<div class="column2">
+<ul>
+<li>通称: 「<strong>宇宙本</strong>」</li>
+</ul>
+<ol type="1">
+<li>RStudio 入門(<span class="citation" data-cites="y">@y</span>__mattu)</li>
+<li>スクレイピングによるデータ取得(<span class="citation" data-cites="y">@y</span>__mattu)</li>
+<li>dplyr を中心としたデータハンドリング(<span class="citation" data-cites="yutannihilation">@yutannihilation</span>)</li>
+<li>ggplot2 による可視化(<span class="citation" data-cites="kyn02666">@kyn02666</span>)</li>
+<li>R Markdown によるレポーティング(<span class="citation" data-cites="kazutan">@kazutan</span>)</li>
+</ol>
+</div>
+</section></section>
+<section><section class="titleslide slide level1"><h1>本題</h1></section><section class="slide level2">
+<h2>この発表の目的</h2>
+<ul>
+<li>ベイズ実践編の方々(LT, 応用セッション)に繋げる</li>
+<li>繋げる: 全部は理解できなくても、何をしているのかくらいはだいたい分かるようにする</li>
+<li>ベイズ推定で頻繁に用いられる MCMC の基礎を理解</li>
+<li>最近人気の Stan の基礎を理解</li>
+</ul>
+</section><section class="slide level2">
+<h2>おことわり</h2>
+<ul>
+<li>数学的な解説は最小限に留めます(教科書に書いてあるから)。</li>
+<li>「何をやっているのか」を直感的に理解することを優先</li>
+</ul>
+</section><section class="slide level2">
+<h2>このスライドを見るには</h2>
+<p><a href="https://github.com/ymattu/TokyoR70" class="uri">https://github.com/ymattu/TokyoR70</a></p>
+<ul>
+<li>このスライドは<strong>revealjs</strong> パッケージで作成しています</li>
+</ul>
+</section></section>
+<section><section id="mcmcintro" class="titleslide slide level1"><h1>MCMC 導入</h1></section><section id="whymcmc" class="slide level2">
+<h2>なぜ MCMC か</h2>
+<p><br /><span class="math display">$$
+\begin{aligned}
+p(\alpha \mid x) &amp;= \frac{p(x \mid \alpha) \times p(\alpha)}{p(x)}
+\end{aligned}
+$$</span><br /></p>
+<ul>
+<li>知りたいのは事後分布<span class="math inline"><em>p</em>(<em>α</em> ∣ <em>x</em>)</span></li>
+<li>例: <span class="math inline"><em>y</em> = <em>β</em><em>x</em> + <em>e</em></span> で <span class="math inline"><em>β</em></span>の事後分布を求めたい</li>
+<li>でも <span class="math inline"><em>p</em>(<em>x</em>)=∫<em>p</em>(<em>x</em> ∣ <em>α</em>)×<em>p</em>(<em>α</em>)<em>d</em><em>α</em></span> は一般に計算が大変 <br> → MCMC をつかう</li>
+</ul>
+</section><section id="whatismcmc" class="slide level2">
+<h2>MCMC(Markov Chain Monte Carlo)</h2>
+<ul>
+<li>すごくざっくり:「<strong>サンプルをたくさん発生させて事後分布のかわりにしよう</strong>」</li>
+<li>ざっくり: データ<span class="math inline"><em>x</em></span>が与えられたとき、事後分布<span class="math inline"><em>p</em>(<em>α</em> ∣ <em>x</em>)</span>からパラメータ<span class="math inline"><em>α</em></span>をサンプリングする手法</li>
+</ul>
+<p>細かいことは抜きにして:</p>
+<ul>
+<li>Markov Chain: 前の状態で次が決まる</li>
+<li>Monte Carlo: 確率的なアルゴリズム</li>
+</ul>
+</section><section class="slide level2">
+<h2>細かいことは抜きにして。。。</h2>
+<ol type="1">
+<li>初期点を決める</li>
+<li>パラメータをしらみつぶしに変化させて尤度を計算していく</li>
+<li>パラメータをプラス方向かマイナス方向に変えてみて、尤度が大きくなるようならその方向に続けて変えていく</li>
+<li>逆に尤度が小さくなるようなら、反対方向にパラメータを変えていく</li>
+<li>これを収束するまで繰り返す</li>
+<li>MCMC サンプルが完成→これをパラメータの分布にしよう!</li>
+</ol>
+</section><section class="slide level2">
+<h2>よく見る「あれ」が出来上がります</h2>
+<ul>
+<li>これを traceplot といいます</li>
+<li>なんか 1 回じゃ心もとないから複数回(chain)やったほうがいいよね <img src="img/trace1.png" alt="trace1" /></li>
+</ul>
+</section><section class="slide level2">
+<h2>ここで疑問</h2>
+<ol type="1">
+<li>なんでこうなるの？</li>
+<li>収束ってどういうこと？</li>
+</ol>
+</section></section>
+<section><section id="question1" class="titleslide slide level1"><h1>疑問 1 <br> なんでこうなるのか</h1></section><section class="slide level2">
+<h2>仮定</h2>
+<ul>
+<li>マルコフ連鎖では任意の確率変数からスタートした時に、最終的な確率変数の分布が不変になることを仮定</li>
+<li>この分布を<strong>不変分布</strong>という</li>
+</ul>
+</section><section class="slide level2">
+<h2>お天気の例</h2>
+<p><a href="https://www.slideshare.net/teramonagi/ss-5190440" class="uri">https://www.slideshare.net/teramonagi/ss-5190440</a></p>
+</section><section id="ideaofmcmc" class="slide level2">
+<h2>MCMC のアイディア</h2>
+<ul>
+<li>サンプルを得たい確率密度関数が <span class="math inline"><em>p</em>(<em>x</em>)</span></li>
+<li>これを不変分布に持つようなマルコフ連鎖を生成(推移確率を与える)することで、実際のサンプリングをしよう</li>
+<li>サンプルが不変分布に近づく十分条件に<strong>詳細釣り合い条件</strong>というものがある</li>
+</ul>
+</section><section class="slide level2">
+<h2>詳細釣り合い条件</h2>
+<p>ある状態 <span class="math inline"><em>x</em><sup><em>t</em></sup></span> から <span class="math inline"><em>x</em><sup><em>t</em> + 1</sup></span> に移るとき、次の式が成り立つ</p>
+<p><br /><span class="math display"><em>p</em>(<em>x</em><sub><em>t</em></sub>)<em>q</em>(<em>x</em><sub><em>t</em> + 1</sub> ∣ <em>x</em><sub><em>t</em></sub>)=<em>p</em>(<em>x</em><sub><em>t</em> + 1</sub>)<em>q</em>(<em>x</em><sub><em>t</em></sub> ∣ <em>x</em><sub><em>t</em> + 1</sub>)</span><br /></p>
+<p>この <span class="math inline"><em>q</em>(<em>x</em> ∣ <em>y</em>)</span> は提案分布と呼ばれ、現在の状態 <span class="math inline"><em>x</em><sup><em>t</em></sup></span> から次の状態 <span class="math inline"><em>x</em><sup><em>t</em> + 1</sup></span> を得るために用いる確率分布</p>
+</section><section id="kindmcmc" class="slide level2">
+<h2>MCMC アルゴリズムの種類</h2>
+<ul>
+<li>メトロポリス・ヘイスティングス法(M-H 法)</li>
+<li>ギブスサンプリング</li>
+</ul>
+</section></section>
+<section><section id="mhmethod" class="titleslide slide level1"><h1>M-H法</h1></section><section id="ideaofmh" class="slide level2">
+<h2>アイディア</h2>
+<ul>
+<li>必ずしも詳細つり合い条件を満たさない提案分布<span class="math inline"><em>q</em>(<em>x</em> ∣ <em>y</em>)</span>に対して、詳細釣り合い条件を成り立たせるための重み関数$a(x y) $が満たす条件を考える</li>
+</ul>
+<p><br /><span class="math display"><em>p</em>(<em>x</em><sup><em>t</em></sup><em>t</em>)<em>q</em>(<em>x</em><sup><em>t</em> + 1</sup> ∣ <em>x</em><sup><em>t</em></sup>)<em>w</em>(<em>x</em><sup><em>t</em> + 1</sup> ∣ <em>x</em><sup><em>t</em></sup>)=<em>p</em>(<em>x</em><sup><em>t</em></sup><em>t</em>)<em>q</em>(<em>x</em><sup><em>t</em> + 1</sup> ∣ <em>x</em><sup><em>t</em></sup>)</span><br /></p>
+<ul>
+<li>提案分布<span class="math inline"><em>q</em>(<em>x</em> ∣ <em>y</em>)</span>によりサンプルされた<span class="math inline"><em>x</em></span>を<span class="math inline"><em>a</em>(<em>x</em> ∣ <em>y</em>)</span>の確率で採択することで、詳細つり合い条件を満たすようにサンプリングをしよう</li>
+</ul>
+</section><section class="slide level2">
+<h2>このときの採択確率</h2>
+<p><br /><span class="math display">$$
+a(x^{t+1} \mid x^t) = \min \left[1, \frac{p(x^t)q(x^{t+1}  \mid x^t)}{p(x^{t+1})q(x^t \mid x^{t+1})}\right]
+$$</span><br /></p>
+</section><section class="slide level2">
+<h2>うん、イメージがわかない</h2>
+<ul>
+<li>先人の手を借りましょう</li>
+<li><a href="http://d.hatena.ne.jp/hoxo_m/20140911/p1">可視化で理解するマルコフ連鎖モンテカルロ法</a></li>
+</ul>
+</section></section>
+<section><section class="titleslide slide level1"><h1>ギブスサンプリング</h1></section><section id="ideaofgibbs" class="slide level2">
+<h2>アイデア</h2>
+<ul>
+<li>あるパラメータ以外を固定した条件付き分布からサンプリング</li>
+<li>採択確率は常に1</li>
+<li>提案分布と不変分布の関係を仮定できる</li>
+</ul>
+<p><br /><span class="math display">$$
+q(x \mid x^t) = \begin{cases} p(x_i \mid x_{-i}^t) \; &amp;x_{-i} = x_{-i}^t \\ 
+0 \; &amp;otherwise \end{cases}
+$$</span><br /></p>
+<ul>
+<li>これも可視化を見たほうが分かりやすい</li>
+</ul>
+</section></section>
+<section><section id="aboutconverge" class="titleslide slide level1"><h1>収束について</h1></section><section id="aboutburnin" class="slide level2">
+<h2>バーンイン</h2>
+<ul>
+<li>最初の方は初期値依存があるので事後分布の形成から省くことが多い <img src="img/trace1.png" alt="trace1" /></li>
+</ul>
+</section><section id="convergemcmc" class="slide level2">
+<h2>MCMCでの収束</h2>
+<ul>
+<li>Geweke の方法</li>
+<li>Geweke統計量Z値を計算し、MCMCのburn-in期間（前半10%）と後半50%を比較し、|Z|値が十分に小さければMCMCが収束したと考える</li>
+</ul>
+<p><img src="img/trace1.png" alt="trace1" /></p>
+</section></section>
+<section><section id="beginstan" class="titleslide slide level1"><h1>Stan 入門</h1></section><section id="whatsstan" class="slide level2">
+<h2>Stan とは</h2>
+<ul>
+<li>Hamiltonian Monte Carlo 法(HMC)とそれを応用した No-U-Turn Sampler(NUTS)用いたサンプラー
+<ul>
+<li>注: マルコフ連鎖を使っていないので厳密には MCMC ではない</li>
+</ul></li>
+<li>要は「モデル式を書けば勝手に MC(Monte Carlo)してサンプリングしてくれるもの」
+<ul>
+<li>モデル式: 尤度関数と事前分布</li>
+<li>C++で動くので速い</li>
+</ul></li>
+<li><a href="https://github.com/stan-dev/stan/releases/download/v2.17.0/stan-reference-2.17.0.pdf">公式マニュアル</a>が丁寧(PDF 注意)
+<ul>
+<li><a href="https://stan-ja.github.io/gh-pages-html/">和訳</a>もあるよ</li>
+</ul></li>
+</ul>
+</section></section>
+<section><section id="rstan" class="titleslide slide level1"><h1>R で Stan を使ってみる</h1></section><section id="okotowari2" class="slide level2">
+<h2>おことわり</h2>
+<ul>
+<li>ここでは「使ってみる程度」の説明しかできません。</li>
+<li>いろいろな書き方は以下の資料が詳しいです。
+<ul>
+<li><a href="https://www.slideshare.net/simizu706/stan-62042940" class="uri">https://www.slideshare.net/simizu706/stan-62042940</a></li>
+<li><a href="https://www.slideshare.net/simizu706/stan-64926504" class="uri">https://www.slideshare.net/simizu706/stan-64926504</a></li>
+</ul></li>
+</ul>
+</section><section id="installstan" class="slide level2">
+<h2>Stan のインストール</h2>
+<ul>
+<li>OS ごとに違うので以下を見てください</li>
+<li><a href="https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started-(Japanese)" class="uri">https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started-(Japanese)</a></li>
+</ul>
+</section><section id="rstan-" class="slide level2">
+<h2>rstan パッケージのインストール</h2>
+<ul>
+<li>CRAN から</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(<span class="st">&quot;rstan&quot;</span>)</code></pre></div>
+</section><section id="stanworkflow" class="slide level2">
+<h2>R で Stan を使う流れ</h2>
+<ol type="1">
+<li>Stan コードを書く(sample.stan)</li>
+<li>C++でコンパイル</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stanmodel &lt;-<span class="st"> </span>rstan<span class="op">::</span><span class="kw">stan_model</span>(<span class="st">&quot;sample.stan&quot;</span>)</code></pre></div>
+<ol start="3" type="1">
+<li>サンプリング</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">datlist &lt;-<span class="st"> </span><span class="kw">list</span>(...)
+fit &lt;-<span class="st"> </span>rstan<span class="op">::</span><span class="kw">sampling</span>(stanmodel, datlist, <span class="dt">iter=</span><span class="dv">10000</span>, ...)</code></pre></div>
+<ol start="4" type="1">
+<li>結果を出力</li>
+</ol>
+</section></section>
+<section><section id="howtowritestan" class="titleslide slide level1"><h1>Stan の書き方</h1></section><section id="regression" class="slide level2">
+<h2>とりあえず重回帰</h2>
+<ul>
+<li><span class="math inline"><em>y</em> = <em>b</em><sub>0</sub> + <em>b</em><sub>1</sub><em>x</em><sub>1</sub> + <em>b</em><sub>2</sub><em>x</em><sub>2</sub> + <em>e</em>,  <em>e</em> ∼ <em>N</em>(<em>μ</em>, <em>σ</em>)</span></li>
+<li>サンプルデータ
+<ul>
+<li>b0=2, b1=5, b2=-3 のデータを 400 個生成</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">n &lt;-<span class="st"> </span><span class="dv">400</span>
+b0 &lt;-<span class="st"> </span><span class="dv">2</span>
+b1 &lt;-<span class="st"> </span><span class="dv">5</span>
+b2 &lt;-<span class="st"> </span><span class="op">-</span><span class="dv">3</span>
+sigma &lt;-<span class="st"> </span><span class="dv">2</span>
+
+<span class="kw">set.seed</span>(<span class="dv">71</span>)
+xx1 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">1</span>)
+xx2 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n, <span class="dv">2</span>, <span class="dv">2</span>)
+bx &lt;-<span class="st"> </span>b0 <span class="op">+</span><span class="st"> </span>b1<span class="op">*</span>xx1 <span class="op">+</span><span class="st"> </span>b2<span class="op">*</span>xx2
+yy &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n, bx, sigma)
+
+df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">y =</span> yy, <span class="dt">x1 =</span> xx1, <span class="dt">x2 =</span> xx2)</code></pre></div>
+</section><section id="sampledatastan" class="slide level2">
+<h2>サンプルデータ</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">y</th>
+<th style="text-align: right;">x1</th>
+<th style="text-align: right;">x2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">14.4201782</td>
+<td style="text-align: right;">-0.4318422</td>
+<td style="text-align: right;">-3.4241758</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-21.6955991</td>
+<td style="text-align: right;">-0.4471872</td>
+<td style="text-align: right;">6.5855335</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-5.3511933</td>
+<td style="text-align: right;">-0.4785726</td>
+<td style="text-align: right;">0.1395514</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.7327234</td>
+<td style="text-align: right;">0.4171454</td>
+<td style="text-align: right;">0.3261460</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-5.7041057</td>
+<td style="text-align: right;">-0.4179006</td>
+<td style="text-align: right;">1.1598209</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-7.6903685</td>
+<td style="text-align: right;">-1.1871639</td>
+<td style="text-align: right;">1.6534544</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-7.8104954</td>
+<td style="text-align: right;">-1.0722855</td>
+<td style="text-align: right;">2.5685698</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.6245938</td>
+<td style="text-align: right;">1.0032838</td>
+<td style="text-align: right;">1.1200353</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-6.3806865</td>
+<td style="text-align: right;">-1.1084783</td>
+<td style="text-align: right;">0.6905064</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.4814420</td>
+<td style="text-align: right;">1.2634307</td>
+<td style="text-align: right;">0.1718988</td>
+</tr>
+</tbody>
+</table>
+</section><section id="stan-" class="slide level2">
+<h2>Stan の文法</h2>
+<ul>
+<li>function{}</li>
+<li><strong>data{}</strong></li>
+<li>transformed data{}</li>
+<li><strong>parameters{}</strong></li>
+<li>transformed parameters{}</li>
+<li><strong>model{}</strong></li>
+<li>generated quantities{}</li>
+</ul>
+<p>注: 順番はこの順でなければならない</p>
+</section><section id="regstan" class="slide level2">
+<h2>重回帰を書いてみる</h2>
+<p>これを <code>sample.stan</code> として保存</p>
+<pre class="stan"><code>data {
+  int N ; // num of obs
+  real x1[N] ; // independent variable 1
+  real x2[N] ; // independent variable 2
+  real y[N] ; // dependent variable
+}
+
+parameters {
+  real b0 ;
+  real b1 ;
+  real b2 ;
+  real&lt;lower=0&gt; sigma ;
+}
+
+model {
+  for (i in 1:N) {
+    y[i] ~ normal(b0 + b1 * x1[i] + b2 * x2[i], sigma) ;
+  }
+}</code></pre>
+</section><section id="kickinr" class="slide level2">
+<h2>実行はRで</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rstan)
+
+<span class="co"># コンパイル</span>
+stanmodel &lt;-<span class="st"> </span><span class="kw">stan_model</span>(<span class="st">&quot;sample.stan&quot;</span>)
+
+datlist &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">y =</span> df<span class="op">$</span>y,
+                <span class="dt">x1 =</span> df<span class="op">$</span>x1,
+                <span class="dt">x2 =</span> df<span class="op">$</span>y,
+                <span class="dt">N =</span> <span class="kw">nrow</span>(df))
+
+fit &lt;-<span class="st"> </span><span class="kw">sampling</span>(stanmodel, datlist)</code></pre></div>
+</section><section id="checkconverge" class="slide level2">
+<h2>収束を確認1</h2>
+<p>トレースプロットを見る</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">traceplot</span>(fit)</code></pre></div>
+<p><img src="slide_files/figure-revealjs/unnamed-chunk-10-1.png" width="300" height="300" /></p>
+</section><section id="checkconverge2" class="slide level2">
+<h2>収束を確認2</h2>
+<ul>
+<li>Rhat という指標を見る
+<ul>
+<li>このあたりのパラメータの取り出し方は<a href="https://www.slideshare.net/daikihojo/stan-70425025">北條さん資料</a>が詳しい</li>
+</ul></li>
+<li>これが 1.05(1.1とも)以下ならOK</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(fit)<span class="op">$</span>summary</code></pre></div>
+<pre><code>             mean      se_mean         sd        2.5%         25%
+b0       2.025081 0.0028269389 0.14803756    1.740184    1.923768
+b1       4.834611 0.0016919143 0.10700606    4.628631    4.760272
+b2      -2.933941 0.0009892484 0.05203129   -3.036034   -2.968873
+sigma    2.046228 0.0011815352 0.07382550    1.906331    1.995531
+lp__  -484.974192 0.0321805712 1.39814965 -488.418567 -485.714889
+              50%         75%       97.5%    n_eff      Rhat
+b0       2.025092    2.123802    2.321898 2742.275 0.9999702
+b1       4.835004    4.906985    5.048263 4000.000 0.9999912
+b2      -2.933319   -2.898268   -2.835307 2766.422 0.9996749
+sigma    2.044362    2.096117    2.199582 3904.086 1.0002324
+lp__  -484.645567 -483.942269 -483.207848 1887.643 1.0013678</code></pre>
+</section><section id="staniroiro" class="slide level2">
+<h2>Stan の書き方いろいろ</h2>
+<h3>モデルを短く書きたい</h3>
+<pre><code>for (i in 1:N) {
+    y[i] ~ normal(b0 + b1 * x1[i] + b2 * x2[i], sigma) ;
+  }</code></pre>
+<p>↓</p>
+<pre><code>data {
+  int N ; // num of obs
+  real x1[N] ; // independent variable 1
+  real x2[N] ; // independent variable 2
+  real y[N] ; // dependent variable
+}
+
+parameters {
+  real b0 ;
+  real b1 ;
+  real b2 ;
+  real&lt;lower=0&gt; sigma ;
+}
+
+transformed parameters {
+  real mu[N] ;
+  for (i in 1:N) {
+    mu[N] = b0 + b1 * x1[i] + b2 * x2[i]
+  }
+}
+
+model {
+  for (i in 1:N) {
+    y[i] ~ normal(mu[i], sigma) ;
+  }
+}</code></pre>
+</section><section id="ewriteinmatrix" class="slide level2">
+<h2>行列で書きたい</h2>
+<ul>
+<li>データやパラメータを行列やベクトルで宣言する必要あり</li>
+</ul>
+<pre><code>data {
+  int N ;
+  int M ; \\ num of independent variables
+  vector[N] y ; \\ dependent variable
+  matrix[N, M] x ; \\ independent variable matrix
+}
+
+parameters {
+  vector[M] b ; \\ parameter vector
+  real&lt;lower=0&gt; sigma ;
+}
+
+model {
+  y ~ normal(x*b, sigma) ;
+}</code></pre>
+</section><section id="kikckrmatrix" class="slide level2">
+<h2>R側も行列を作ります</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">datlist2 &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">N =</span> <span class="kw">nrow</span>(df),
+                 <span class="dt">y =</span> df<span class="op">$</span>y,
+                 <span class="dt">x =</span> <span class="kw">cbind</span>(<span class="dv">1</span>, df<span class="op">$</span>x1, df<span class="op">$</span>x2),
+                 <span class="dt">M =</span> <span class="kw">ncol</span>(x))</code></pre></div>
+</section><section class="slide level2">
+<h2>あれ、そういえば事前分布は？</h2>
+<ul>
+<li>何も指定しなければ無情報事前分布(一様分布)</li>
+<li>でも指定してあげたほうがいい(ベイズだしね！)</li>
+<li>model ブロックに以下を書く(さっきの行列の例)</li>
+</ul>
+<pre><code>y ~ normal(x*b, sigma) ;
+beta ~ normal(0, 100) ; 
+sigma ~ cauchy(0, 5) ;</code></pre>
+</section><section id="othersampling" class="slide level2">
+<h2>　サンプリングの他の書き方</h2>
+<ul>
+<li><code>y ~ normal(mu, sigma)</code> は他の書き方もできる</li>
+<li><code>target += normal_lpdf(y | mu, sigma)</code></li>
+<li><code>***lpdf</code> は対数確率を足し上げる作業
+<ul>
+<li>実はこっちがStan内部でやっていることで、 <code>~</code> のほうが簡略表記</li>
+</ul></li>
+</ul>
+</section></section>
+<section><section id="kokomadestan" class="titleslide slide level1"><h1>ここまでやったところで</h1></section><section id="stanfun" class="slide level2">
+<h2>Stan は楽でいいね！</h2>
+<ul>
+<li>Stan を使えばモデルを書くだけでパラメータ推定ができる!</li>
+<li>尤度さえわかればモデルが書ける</li>
+</ul>
+</section><section id="stanontheotherhand" class="slide level2">
+<h2>一方で</h2>
+<ul>
+<li>モデルが正しく書けないとどうしようもない
+<ul>
+<li>モデル: 分布、行列etc…</li>
+</ul></li>
+<li>発展的なモデル(階層モデル、状態空間モデル)を勉強するときはサボらずに尤度、行列表記くらいまではちゃんと理解できるよう努めましょう。</li>
+</ul>
+</section></section>
+<section><section id="matome" class="titleslide slide level1"><h1>まとめ</h1></section><section id="conclusion" class="slide level2">
+<h2>なにをやったか</h2>
+<ul>
+<li>MCMC をざっくり理解</li>
+<li>Stan の書き方をざっくり理解</li>
+</ul>
+<p>※正直なところ、30-40分では「ちゃんと」は理解できないと思ってます</p>
+</section><section id="more1" class="slide level2">
+<h2>初心者セッション 1-3 をもっと詳しく知りたい人は</h2>
+<h4 id="r-">R で楽しむベイズ統計</h4>
+<div class="column1">
+<p><img src="img/dicebook.jpg" alt="dicebook" /></p>
+</div>
+<div class="column2">
+<ul>
+<li>通称: サイコロ本</li>
+<li>ベイズの定理から MCMC まで <strong>数学的な面も分かりやすく</strong>解説</li>
+<li>わかりやすさと詳細さのバランスがとれた本</li>
+</ul>
+</div>
+</section><section id="more2" class="slide level2">
+<h2>初心者セッション 1-3 をもっと詳しく知りたい人は</h2>
+<h4 id="-rjagsstan-">ベイズ統計モデリング: R,JAGS,Stan によるチュートリアル</h4>
+<div class="column1">
+<p><img src="img/4dogs.jpg" alt="4dogs" /></p>
+</div>
+<div class="column2">
+<ul>
+<li>通称: 犬 4 匹本</li>
+<li>ベイズの定理から MCMC, Stan まで<strong>わかりやすく</strong>解説</li>
+<li>鈍器なみに分厚いです</li>
+</ul>
+</div>
+</section><section id="more3" class="slide level2">
+<h2>初心者セッション 1-3 をもっと詳しく知りたい人は</h2>
+<h4 id="stan--r-">Stan と R でベイズ統計モデリング</h4>
+<div class="column1">
+<p><img src="img/duckbook.jpg" alt="duckbook" /></p>
+</div>
+<div class="column2">
+<ul>
+<li>通称: アヒル本</li>
+<li>Stan によるベイズモデリングをしっかり、分かりやすく解説</li>
+<li>Stan 使うなら必携</li>
+</ul>
+</div>
+</section><section class="slide level2">
+<h2>理論面を理解したい人</h2>
+<ul>
+<li>『データ解析のための統計モデリング入門』（通称: 緑本）</li>
+<li>『計算統計 II－マルコフ連鎖モンテカルロ法とその周辺』（ガチなやつ）</li>
+<li><a href="https://www.youtube.com/watch?v=-H28H1unn0M" class="uri">https://www.youtube.com/watch?v=-H28H1unn0M</a> (MCMC全般)</li>
+<li></li>
+</ul>
+</section></section>
+<section><section id="enjoy" class="titleslide slide level1"><h1>Enjoy!</h1></section></section>
+    </div>
+  </div>
+
+  <script src="slide_files/reveal.js-3.3.0.1/lib/js/head.min.js"></script>
+  <script src="slide_files/reveal.js-3.3.0.1/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Display the page number of the current slide
+        slideNumber: true,
+        // Push each slide change to the browser history
+        history: true,
+        // Vertical centering of slides
+        center: true,
+        // Transition style
+        transition: 'convex', // none/fade/slide/convex/concave/zoom
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+
+
+        chalkboard: {
+          theme: 'whiteboard',
+        },
+
+        keyboard: {
+          67: function() { RevealChalkboard.toggleNotesCanvas() },    // toggle notes canvas when 'c' is pressed
+          66: function() { RevealChalkboard.toggleChalkboard() }, // toggle chalkboard when 'b' is pressed
+          46: function() { RevealChalkboard.clear() },    // clear chalkboard when 'DEL' is pressed
+           8: function() { RevealChalkboard.reset() },    // reset chalkboard data on current slide when 'BACKSPACE' is pressed
+          68: function() { RevealChalkboard.download() }, // downlad recorded chalkboard drawing when 'd' is pressed
+        },
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'slide_files/reveal.js-3.3.0.1/plugin/chalkboard/chalkboard.js', async: true },
+        ]
+      });
+    </script>
+
+<script>
+  (function() {
+    if (window.jQuery) {
+      Reveal.addEventListener( 'slidechanged', function(event) {  
+        window.jQuery(event.previousSlide).trigger('hidden');
+        window.jQuery(event.currentSlide).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+
+  </body>
+</html>
